@@ -1,12 +1,13 @@
 /**
  * @name AutoSkip
  * @description Adds the ability to skip the intro/credit of a movie/series.
- * @version 1.0.1
+ * @version 1.0.0
  * @author Fxy
- * @updateUrl https://raw.githubusercontent.com/YourUsername/YourRepo/main/ReloadOnShortcut.plugin.js
+ * @updateUrl https://raw.githubusercontent.com/fxy6969/Stremio-Skip/main/autoskip.plugin.js
  */
 let videoPlayer, controlPlayer, skipButton, currentTimeStamp;
 let loggedMovieInfo = {};
+let isButtonAdded = false;
 
 function addButton() {
   videoPlayer = document.querySelector("#videoPlayer");
@@ -17,6 +18,11 @@ function addButton() {
     setTimeout(() => addButton(), 500);
     videoPlayer = null;
     controlPlayer = null;
+    return;
+  }
+
+  if (isButtonAdded) {
+    console.log("Button already added, skipping...");
     return;
   }
 
@@ -49,6 +55,7 @@ function addButton() {
   getMovieInfo();
   skipButton.addEventListener("click", handleSkipIntro);
   controlPlayer.appendChild(skipButton);
+  isButtonAdded = true;
 }
 
 function getMovieInfo() {
@@ -124,7 +131,7 @@ function resetElements() {
   controlPlayer = null;
   skipButton = null;
   currentTimeStamp = null;
-  loggedMovieInfo = {};
+  isButtonAdded = false;
 }
 
 function tickTime() {
@@ -132,6 +139,11 @@ function tickTime() {
     console.log("Not in video player");
     resetElements();
     return;
+  }
+
+  if (!isButtonAdded) {
+    console.log("Button not added, adding now...");
+    addButton();
   }
 
   currentTimeStamp = document.querySelector("#play-progress-text")?.textContent;
@@ -159,3 +171,20 @@ function isInVideoPlayer() {
 
 setInterval(tickTime, 200);
 addButton();
+
+// Observe DOM changes to detect when user enters/leaves video player
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.type === "childList") {
+      if (isInVideoPlayer() && !isButtonAdded) {
+        console.log("Detected entry into video player, adding button...");
+        addButton();
+      }
+    }
+  });
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true,
+});
