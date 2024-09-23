@@ -5,14 +5,18 @@
  * @author Fxy
  * @updateUrl https://raw.githubusercontent.com/fxy6969/Stremio-Skip/main/autoskip.plugin.js
  */
-let videoPlayer, controlPlayer, skipButton, currentTimeStamp;
-let loggedMovieInfo = {};
 let isButtonAdded = false;
+let skipButton, currentTimeStamp;
+let loggedMovieInfo = {};
+
+let videoPlayer = document.querySelector("#videoPlayer");
+let controlPlayer = document.querySelector("#player");
+const titleElement = document.querySelector(
+  "#player > div.binge-group.ng-hide > div.title.ng-binding > span",
+);
+const episodeTitleElement = document.querySelector("head > title");
 
 function addButton() {
-  videoPlayer = document.querySelector("#videoPlayer");
-  controlPlayer = document.querySelector("#player");
-
   if (!isInVideoPlayer()) {
     console.log(`one of the elements not found. Retrying...`);
     setTimeout(() => addButton(), 500);
@@ -28,7 +32,7 @@ function addButton() {
 
   videoPlayer.setAttribute("style", "z-index: -1");
   skipButton = document.createElement("div");
-  skipButton.innerHTML = `<span>Skip Intro</span>`;
+  skipButton.innerHTML = `<span>Skip ${loggedMovieInfo.has_recap ? "Recap" : "Intro"}</span>`;
 
   skipButton.setAttribute(
     "style",
@@ -53,16 +57,15 @@ function addButton() {
   );
 
   getMovieInfo();
-  skipButton.addEventListener("click", handleSkipIntro);
+  skipButton.addEventListener("click", handleSkip);
   controlPlayer.appendChild(skipButton);
   isButtonAdded = true;
 }
 
 function getMovieInfo() {
   if (!isInVideoPlayer()) return;
-  const title = document.querySelector(
-    "#player > div.binge-group.ng-hide > div.title.ng-binding > span",
-  )?.textContent;
+
+  let title = titleElement.textContent;
   if (!title) {
     console.log(`Title not found. Retrying...`);
     setTimeout(() => getMovieInfo(), 200);
@@ -83,7 +86,6 @@ function getMovieInfo() {
     xhr.onload = () => {
       if (xhr.readyState == 4 && xhr.status == 200) {
         console.log("Fetched movie info:", xhr.response);
-        // Log the movie info
         loggedMovieInfo[title] = xhr.response;
         resolve(xhr.response);
       } else {
@@ -97,27 +99,43 @@ function getMovieInfo() {
   });
 }
 
-function handleSkipIntro() {
-  const title = document.querySelector(
-    "#player > div.binge-group.ng-hide > div.title.ng-binding > span",
-  )?.textContent;
-  if (!title) {
-    console.log("Title not found");
+function handleSkip() {
+  if (!titleElement || !episodeTitleElement) {
+    console.log("Title or episode title not found");
     return;
   }
 
-  const movieInfo = loggedMovieInfo[title];
-  if (movieInfo && movieInfo.end_intro) {
-    videoPlayer.currentTime = movieInfo.end_intro;
+  const title = titleElement.textContent;
+  const episodeTitle = episodeTitleElement?.textContent;
+  console.log("episode: " + episodeTitle);
+
+  const episodeInfo = getEpisodeInfo(title, episodeTitle);
+
+  if (episodeInfo) {
+    if (episodeInfo.has_recap && isInRecapTime(episodeInfo)) {
+      videoPlayer.currentTime = parseFloat(episodeInfo.recap_end);
+    } else if (episodeInfo.end_intro) {
+      videoPlayer.currentTime = parseFloat(episodeInfo.end_intro);
+    } else {
+      console.log("Skip time not available");
+    }
   } else {
-    console.log("Intro end time not available");
+    console.log("Episode info not available");
     // If we don't have the info, try to fetch it
     getMovieInfo()
-      .then((info) => {
-        if (info && info.end_intro) {
-          videoPlayer.currentTime = info.end_intro;
-        } else {
-          console.log("Intro end time not available even after fetching");
+      .then(() => {
+        const updatedEpisodeInfo = getEpisodeInfo(title, episodeTitle);
+        if (updatedEpisodeInfo) {
+          if (
+            updatedEpisodeInfo.has_recap &&
+            isInRecapTime(updatedEpisodeInfo)
+          ) {
+            videoPlayer.currentTime = parseFloat(updatedEpisodeInfo.recap_end);
+          } else if (updatedEpisodeInfo.end_intro) {
+            videoPlayer.currentTime = parseFloat(updatedEpisodeInfo.end_intro);
+          } else {
+            console.log("Skip time not available even after fetching");
+          }
         }
       })
       .catch((error) => {
@@ -155,18 +173,107 @@ function tickTime() {
   }
 
   let timeParts = currentTimeStamp.split(":");
-  let timeStamp = parseFloat(timeParts[0]) * 60 + parseFloat(timeParts[1]);
-  if (timeStamp >= 0 && timeStamp < 60) {
-    skipButton.style.display = "inline-flex";
-  } else {
-    skipButton.style.display = "none";
+  let currentTime = parseFloat(timeParts[0]) * 60 + parseFloat(timeParts[1]);
+
+  if (titleElement && episodeTitleElement) {
+    const title = titleElement.textContent;
+    const episodeTitle = episodeTitleElement.textContent;
+
+    console.log("Searching for episode:", episodeTitle); // Add this line
+
+    const episodeInfo = getEpisodeInfo(title, episodeTitle);
+
+    if (episodeInfo) {
+      const startIntro = parseFloat(episodeInfo.start_intro);
+      const endIntro = parseFloat(episodeInfo.end_intro);
+      const hasRecap = episodeInfo.has_recap;
+      const recapEnd = hasRecap ? parseFloat(episodeInfo.recap_end) : 0;
+
+      console.log(
+        startIntro +
+          " " +
+          endIntro +
+          " " +
+          hasRecap +
+          " " +
+          recapEnd +
+          " " +
+          currentTime,
+      );
+      if (hasRecap && currentTime >= 0 && currentTime < recapEnd) {
+        skipButton.style.display = "inline-flex";
+        skipButton.innerHTML = "<span>Skip Recap</span>";
+      } else if (currentTime >= startIntro && currentTime < endIntro) {
+        skipButton.style.display = "inline-flex";
+        skipButton.innerHTML = "<span>Skip Intro</span>";
+      } else {
+        skipButton.style.display = "none";
+      }
+    } else {
+      console.log("Title or episode title not found");
+      skipButton.style.display = "none";
+    }
   }
 }
 
+function isInRecapTime(episodeInfo) {
+  const currentTime = videoPlayer.currentTime;
+  return currentTime < parseFloat(episodeInfo.recap_end);
+}
+
 function isInVideoPlayer() {
-  return (
-    document.querySelector("#videoPlayer") && document.querySelector("#player")
+  return videoPlayer && controlPlayer;
+}
+
+function getEpisodeInfo(title, episodeTitle) {
+  console.log("Getting episode info for:", title, episodeTitle);
+  if (!loggedMovieInfo[title] || !loggedMovieInfo[title].episodes) {
+    console.log("No episode data found for:", title);
+    return null;
+  }
+
+  // Function to remove special characters and convert to lowercase
+  const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const normalizedEpisodeTitle = normalize(episodeTitle);
+  console.log("Normalized episode title:", normalizedEpisodeTitle);
+
+  // Try to find an exact match first
+  let episode = loggedMovieInfo[title].episodes.find(
+    (ep) => normalize(ep.episode) === normalizedEpisodeTitle,
   );
+
+  if (episode) {
+    console.log("Found exact match:", episode.episode);
+    return episode;
+  }
+
+  // If no exact match, try to find a partial match
+  episode = loggedMovieInfo[title].episodes.find(
+    (ep) =>
+      normalize(ep.episode).includes(normalizedEpisodeTitle) ||
+      normalizedEpisodeTitle.includes(normalize(ep.episode)),
+  );
+
+  if (episode) {
+    console.log("Found partial match:", episode.episode);
+    return episode;
+  }
+
+  // If still no match, try to match by episode number
+  const episodeNumber = episodeTitle.match(/\d+/);
+  if (episodeNumber) {
+    episode = loggedMovieInfo[title].episodes.find((ep) =>
+      ep.episode.includes(episodeNumber[0]),
+    );
+    if (episode) {
+      console.log("Found match by episode number:", episode.episode);
+      return episode;
+    }
+  }
+
+  console.log("No matching episode found");
+  return null;
 }
 
 setInterval(tickTime, 200);

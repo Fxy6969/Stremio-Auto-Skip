@@ -11,10 +11,10 @@ def name(name):
         return data[name]
 
 
-@app.route('/<name>/<start_intro>/<end_intro>')
-def update_intro(name, start_intro, end_intro):
+@app.route('/<name>/<episode>/<start_intro>/<end_intro>')
+def update_intro(name, episode, start_intro, end_intro):
     if name in data:
         with open('data.json', 'w') as f:
-            data[name] = {"start_intro": start_intro, "end_intro": end_intro}
+            data[name] = {"start_intro": start_intro, "end_intro": end_intro, "episode": episode}
             json.dump(data, f)
         return "Updated"

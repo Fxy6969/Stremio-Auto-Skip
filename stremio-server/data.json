@@ -1,3 +1,7 @@
 {
-  "dexter": { "start_intro": "-0.1", "end_intro": "85.0" }
+	"dexter": {
+    "episodes": [
+		  { "episode": "It's Alive!", "start_intro": "8.1", "end_intro": "85.0", "has_recap": true, "recap_end": "50" }
+    ]
+  }
 }
