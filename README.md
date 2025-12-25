@@ -1,16 +1,16 @@
-⏩ Stremio Auto-Skip
+# Stremio Auto-Skip
 A community-driven, intelligent auto-skipper for Stremio Enhanced. This plugin automatically detects and skips intros, outros, and recaps using a combination of subtitle analysis, audio fingerprinting, and a collaborative voting system.
 
 Designed to complement the Stremio Glass Theme.
 
 ---
 
-⚠️ Project Status: Pre-Release
+### ⚠️ Project Status: Pre-Release
 Important Notice: The client-side plugin is currently hardcoded to communicate with localhost:3000. The backend server is not yet live. Currently, there is no way to use the plugin in a production environment until the official server release.
 
 https://github.com/user-attachments/assets/1d5f08a9-8dd3-4589-b8b4-5715383cac14
 
-✨ Key Features
+## ✨ Key Features
 
 Triple-Threat Detection:
 
@@ -28,7 +28,7 @@ Glass UI: A sleek, modern "Skip" button and notification system that matches the
 
 ---
 
-🛠️ How it Works
+## 🛠️ How it Works
 The system utilizes a Client-Server Architecture:
 
 The Backend (Server): A high-performance server that handles:
