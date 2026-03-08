@@ -106,14 +106,4 @@ Contributions are welcome!
 
 ---
 
-## 📝 Changelog
-
-### v26.0.0
-- Removed server dependency — plugin now runs entirely in the browser
-- Added localStorage caching with 7-day TTL
-- Added yellow progress bar highlight for skippable segments
-- Streamlined to a single self-contained file
-  
----
-
 **Made with ❤️ for the Stremio community**
