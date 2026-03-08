@@ -7,8 +7,7 @@ https://github.com/user-attachments/assets/c2503603-9fff-4d1d-b7f0-e5c348873580
 [![Discord](https://img.shields.io/discord/1470879221164282064?style=flat&logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/qxDpXdq6)
 [![Reddit Community](https://img.shields.io/reddit/subreddit-subscribers/StremioMods?style=social&logo=reddit&label=r/StremioMods)](https://www.reddit.com/r/StremioMods/)  
 
-**Stremio Auto-Skip** is a lightweight Stremio Enhanced plugin that automatically detects TV show intros and recaps and shows a **"Skip Intro"** button — just like Netflix.  
-It also highlights skippable segments directly on the video progress bar so you always know what's coming.
+**Stremio Auto-Skip** is a lightweight Stremio Enhanced plugin that automatically detects TV show intros and shows a **"Skip Intro"** button — just like Netflix.  
 
 ---
 
@@ -74,10 +73,12 @@ this.EXTERNAL_API = 'https://mzt4pr8wlkxnv0qsha5g.website/intro';
 
 ---
 
-## 🧪 Known Issues
+## 🧪 Known Issues and TODO
 
 - Skip data is only available for episodes that have been submitted to the community database — not all episodes will have results
 - Recap detection is currently not implemented.
+- Highlight skippable segment on the progressbar
+- Caching
 
 ---
 
